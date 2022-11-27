@@ -11,7 +11,10 @@ namespace Ogettobot
     {
         DiscordSocketClient bot = new DiscordSocketClient();
         bool going = bool.Parse(File.ReadAllText("going.txt"));
-        ulong guild = 1038193028717887549;
+        ulong guild = ulong.Parse(File.ReadAllText(@"Need\guild.txt")),
+            player = ulong.Parse(File.ReadAllText(@"Need\player.txt")),
+            owner = ulong.Parse(File.ReadAllText(@"Need\owner.txt")),
+            news = ulong.Parse(File.ReadAllText(@"Need\news.txt"));
 
         static void Main(string[] args)
             => new Program().Start().GetAwaiter().GetResult();
@@ -23,7 +26,7 @@ namespace Ogettobot
             bot.ModalSubmitted += Modals;
             bot.ButtonExecuted += Buttons;
 
-            await bot.LoginAsync(TokenType.Bot, "MTA0NTcwMjc3MDQ1MzQwMTY5Mg.GB6gTM.0LKxoL7WN1eZuN2mwjM05MQsqBPedI1LLcteLI");
+            await bot.LoginAsync(TokenType.Bot, File.ReadAllText(@"Need\token.txt"));
             await bot.StartAsync();
 
             Console.ReadLine();
@@ -38,15 +41,14 @@ namespace Ogettobot
         async Task Ready()
         {
             await bot.SetStatusAsync(UserStatus.Idle);
-            /*var mainmenu = new ButtonBuilder()
+           /* var mainmenu = new ButtonBuilder()
                 .WithLabel("Главное меню")
                 .WithCustomId("mainmenu")
                 .WithStyle(ButtonStyle.Primary)
                 .WithEmote(Emoji.Parse("⭐"));
             var mc = new ComponentBuilder()
-                .WithButton(start);
-            await bot.GetGuild(guild).GetTextChannel(1045701583935115354).SendMessageAsync("Чтобы начать, нажмите кнопку!", false, null, null, null, null, mc.Build());*/
-            await bot.GetGuild(guild).DeleteApplicationCommandsAsync();
+                .WithButton(mainmenu);
+            await bot.GetGuild(guild).GetTextChannel(secretsant).SendMessageAsync("Чтобы начать, нажмите на кнопку!", false, null, null, null, null, mc.Build());*/
         }
 
         async Task Modals(SocketModal mod)
@@ -66,7 +68,7 @@ namespace Ogettobot
                     File.WriteAllText(@"News\Count.txt", count.ToString());
                     File.WriteAllText(@"NewsTitle\Count.txt", count.ToString());
 
-                    await bot.GetGuild(guild).GetTextChannel(1045711728555589662).SendMessageAsync("||<@&1046033614011379763>||\nСнег всё ещё идёт, а северные ветра принесли нам новые новости, проверте ваши почтовые ящики!");
+                    await bot.GetGuild(guild).GetTextChannel(this.news).SendMessageAsync($"||<@&{this.player}>||\nСнег всё ещё идёт, а северные ветра принесли нам новые новости, проверте ваши почтовые ящики!");
                     await mod.RespondAsync("Новость записсана, участники уведомленны!", null, false, true);
                 }
 
@@ -75,14 +77,14 @@ namespace Ogettobot
                     List<SocketMessageComponentData> component = new(mod.Data.Components);
 
                     File.Create($@"Users\{mod.User.Id.ToString()}.txt").Close();
-                    File.WriteAllText($@"Users\{mod.User.Id}.txt", component[0].Value + "\n" + component[1].Value + "\nnull");
+                    File.WriteAllText($@"Users\{mod.User.Id}.txt", component[0].Value + "\n" + component[1].Value + "\nnull\nnull");
 
                     if (File.ReadAllText(@"Users\allplayers.txt").Length > 0)
                         File.WriteAllText(@"Users\allplayers.txt", File.ReadAllText($@"Users\allplayers.txt") + "\n" + mod.User.Id.ToString());
                     else
                         File.WriteAllText(@"Users\allplayers.txt", mod.User.Id.ToString());
 
-                    await bot.GetGuild(guild).GetUser(mod.User.Id).AddRoleAsync(1046033614011379763);
+                    await bot.GetGuild(guild).GetUser(mod.User.Id).AddRoleAsync(this.player);
 
                     var mainmenu = new ButtonBuilder()
                         .WithLabel("В главное меню")
@@ -119,14 +121,14 @@ namespace Ogettobot
                 {
                     List<SocketMessageComponentData> component = new(mod.Data.Components);
                     string[] stats = File.ReadAllLines($@"Users\{mod.User.Id.ToString()}.txt");
-                    stats[2] = component[0].Value;
+                    stats[2] = $@"{component[0].Value}";
                     File.WriteAllLines($@"Users\{mod.User.Id.ToString()}.txt", stats);
 
                     var photo = new EmbedBuilder()
                         .WithTitle("**Ваша фотография для профиля**")
                         .WithDescription("Убедитесь, что на фотографии вас хорошо видно!")
                         .WithImageUrl(stats[2])
-                        .WithColor(new());
+                        .WithColor(new(249, 218, 5));
 
                     await mod.RespondAsync("", null, false, true, null, null, photo.Build());
                 }
@@ -143,7 +145,7 @@ namespace Ogettobot
                     bool registered = false;
 
                     foreach (SocketRole role in roles)
-                        if (role.Id == 1045804822785433651 || role.Id == 1046033614011379763)
+                        if (role.Id == this.owner || role.Id == this.player)
                             registered = true;
 
                     if (registered)
@@ -151,7 +153,7 @@ namespace Ogettobot
                         bool owner = false;
 
                         foreach (SocketRole role in roles)
-                            if (role.Id == 1045804822785433651)
+                            if (role.Id == this.owner)
                                 owner = true;
 
                         var mail = new ButtonBuilder()
@@ -160,7 +162,7 @@ namespace Ogettobot
                             .WithStyle(ButtonStyle.Primary)
                             .WithEmote(Emoji.Parse("📬"));
                         var profile = new ButtonBuilder()
-                            .WithLabel("Обо ине любимом")
+                            .WithLabel("Обо мне любимом")
                             .WithCustomId("profile")
                             .WithStyle(ButtonStyle.Primary)
                             .WithEmote(Emoji.Parse("🚹"));
@@ -180,7 +182,7 @@ namespace Ogettobot
 
                         var main = new EmbedBuilder()
                             .WithTitle("**Главное меню**")
-                            .WithDescription("Здесь проходит мероприятие 'Тайный санта', надеюсь на табе!")
+                            .WithDescription("Здесь проходит мероприятие 'Тайный санта', надеюсь на тебя!")
                             //.WithImageUrl("")
                             .WithColor(new(249, 218, 5));
 
@@ -211,7 +213,7 @@ namespace Ogettobot
                     bool registered = false;
 
                     foreach (SocketRole role in roles)
-                        if (role.Id == 1046033614011379763)
+                        if (role.Id == this.player)
                             registered = true;
 
                     if (!registered)
@@ -417,7 +419,7 @@ namespace Ogettobot
                     var news = new EmbedBuilder()
                         .WithTitle($@"**{File.ReadAllText($@"NewsTitle\{btn.Data.CustomId}.txt")}**")
                         .WithDescription(File.ReadAllText($@"News\{btn.Data.CustomId}.txt"))
-                        .WithColor(new(0, 0, 0));
+                        .WithColor(new(249, 218, 5));
 
                     var mainmenu = new ButtonBuilder()
                         .WithLabel("В главное меню")
@@ -443,7 +445,7 @@ namespace Ogettobot
 
                     foreach (SocketRole role in roles)
                     {
-                        if (role.Id == 1046033614011379763)
+                        if (role.Id == this.player)
                             player = true;
                     }
 
@@ -568,7 +570,7 @@ namespace Ogettobot
 
                 else if (btn.Data.CustomId == "client")
                 {
-                    if (File.ReadAllLines($@"Users\{btn.User.Id}.txt").Length == 4)
+                    if (going)
                     {
                         var mainmenu = new ButtonBuilder()
                             .WithLabel("В главное меню")
@@ -635,7 +637,7 @@ namespace Ogettobot
                     File.WriteAllLines(@"Users\allplayers.txt", newusers);
                     File.Delete($@"Users\{btn.User.Id}.txt");
 
-                    await bot.GetGuild(guild).GetUser(btn.User.Id).RemoveRoleAsync(1046033614011379763);
+                    await bot.GetGuild(guild).GetUser(btn.User.Id).RemoveRoleAsync(this.player);
 
                     await btn.RespondAsync("Готово, вы больше не учавствуете в мероприяьие", null, false, true);
                 }
@@ -754,7 +756,7 @@ namespace Ogettobot
                             .WithDescription("Мероприятие 'Тайный санта' началось, все вы уже получили участника, которого вы будете поздравлять, чтобы узнать кто это, зайдите в 'профиль', а после в 'цель', там вы сможете увидеть описание этого счастливчика.\nЖелаю удачи!")
                             .WithColor(new(0, 255, 0));
 
-                        await bot.GetGuild(guild).GetTextChannel(1045711728555589662).SendMessageAsync("||<@&1046033614011379763>||", false, start.Build());
+                        await bot.GetGuild(guild).GetTextChannel(this.news).SendMessageAsync($"||<@&{this.player}>||", false, start.Build());
                         await btn.RespondAsync("Мероприятие 'Тайный санта' началось!", null, false, true);
                     }
 
@@ -772,7 +774,7 @@ namespace Ogettobot
                         .WithDescription("Мероприятие 'Тайный санта' закончилось, надеюсь, вы успели сделать всё необходимое и готовы подарить это другим участникам!")
                         .WithColor(new(255, 0, 0));
 
-                    await bot.GetGuild(guild).GetTextChannel(1045711728555589662).SendMessageAsync("||<@&1046033614011379763>||", false, end.Build());
+                    await bot.GetGuild(guild).GetTextChannel(this.news).SendMessageAsync($"||<@&{this.player}>||", false, end.Build());
                     await btn.RespondAsync("Мероприятие 'Тайный санта' закончилось!", null, false, true);
                 }
 
